@@ -1,0 +1,347 @@
+# Forum API quickstart (Laravel)
+# Update the variables below to match your local environment before sending requests.
+
+@baseUrl = http://127.0.0.1:8000/api
+@frontendUrl = http://localhost:3000
+@authToken =
+@studentToken =
+@companyToken =
+@uid = your-email-uid
+@token = your-verification-or-reset-token
+
+# Test credentials (replace with real accounts created via the endpoints below)
+@studentEmail = agbehyavargas@gmail.com
+@studentPassword = Passw0rd!
+@companyEmail = agbehyavargas@gmail.com
+@companyPassword = Passw0rd!
+
+# Resource identifiers captured from responses; defaults are placeholders
+@studentProfileId = 1
+@companyProfileId = 1
+@cvSlug = replace-with-cv-slug
+@opportunitySlug = replace-with-opportunity-slug
+
+###
+# Student registration
+POST {{baseUrl}}/auth/student/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{studentEmail}}",
+  "password": "{{studentPassword}}",
+  "confirm_password": "{{studentPassword}}",
+  "first_name": "Alice",
+  "last_name": "Durand",
+  "phone_number": "+33600000000",
+  "school": "ecc",
+  "school_name": null,
+  "major": "ingenieur",
+  "school_year": "3",
+  "linkedin_url": "https://linkedin.com/in/alice-durand",
+  "github_url": "https://github.com/alicedurand",
+  "portfolio_url": "https://alice.dev",
+  "accept_terms": true
+}
+
+###
+# Company registration
+POST {{baseUrl}}/auth/company/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{companyEmail}}",
+  "password": "{{companyPassword}}",
+  "confirm_password": "{{companyPassword}}",
+  "company_name": "Acme Industries",
+  "industry": "tech",
+  "company_size": "11-50",
+  "company_description": "Solutions logicielles pour l'industrie.",
+  "website": "https://acme.test",
+  "address": "123 Rue de Paris, Lyon",
+  "contact_first_name": "Jean",
+  "contact_last_name": "Martin",
+  "contact_phone": "+33102030405",
+  "accept_terms": true
+}
+
+###
+# Student login (stores studentToken + authToken)
+# @name StudentLogin
+POST {{baseUrl}}/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{studentEmail}}",
+  "password": "{{studentPassword}}",
+  "remember_me": true
+}
+
+> {%
+  const body = response.body;
+  if (body?.token) {
+    client.global.set("studentToken", body.token);
+    client.global.set("authToken", body.token);
+    client.log(`Stored studentToken (${body.token.substring(0,16)}...)`);
+  }
+  const studentProfileId = body?.user?.student_profile?.id;
+  if (studentProfileId) {
+    client.global.set("studentProfileId", studentProfileId);
+    client.log(`studentProfileId set to ${studentProfileId}`);
+  }
+%}
+
+###
+# Company login (stores companyToken + authToken)
+# @name CompanyLogin
+POST {{baseUrl}}/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{companyEmail}}",
+  "password": "{{companyPassword}}"
+}
+
+> {%
+  const body = response.body;
+  if (body?.token) {
+    client.global.set("companyToken", body.token);
+    client.global.set("authToken", body.token);
+    client.log(`Stored companyToken (${body.token.substring(0,16)}...)`);
+  }
+  const companyProfileId = body?.user?.company_profile?.id;
+  if (companyProfileId) {
+    client.global.set("companyProfileId", companyProfileId);
+    client.log(`companyProfileId set to ${companyProfileId}`);
+  }
+%}
+
+###
+# Current user profile (uses latest authToken)
+GET {{baseUrl}}/auth/me
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+###
+# Logout current session
+POST {{baseUrl}}/auth/logout
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+###
+# Resend email verification link
+POST {{baseUrl}}/auth/verify-email/resend
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{studentEmail}}"
+}
+
+###
+# Verify email callback (fill uid/token from email)
+GET {{baseUrl}}/auth/verify-email/{{uid}}/{{token}}
+Accept: application/json
+
+###
+# Request password reset email
+POST {{baseUrl}}/auth/password/forgot
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{studentEmail}}"
+}
+
+###
+# Confirm password reset (populate with values from email)
+POST {{baseUrl}}/auth/password/reset
+Accept: application/json
+Content-Type: application/json
+
+{
+  "uid": "base64-user-id",
+  "token": "reset-token-from-email",
+  "new_password": "NewPassw0rd!",
+  "confirm_password": "NewPassw0rd!"
+}
+
+###
+# Show student profile
+GET {{baseUrl}}/profiles/student/{{studentProfileId}}
+Accept: application/json
+Authorization: Bearer {{studentToken}}
+
+###
+# Update student profile
+PUT {{baseUrl}}/profiles/student/{{studentProfileId}}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "first_name": "Alice",
+  "last_name": "Durand",
+  "phone_number": "+33601020304",
+  "linkedin_url": "https://linkedin.com/in/alice-durand",
+  "github_url": "https://github.com/alicedurand",
+  "portfolio_url": "https://portfolio.alice.dev"
+}
+
+###
+# Show company profile
+GET {{baseUrl}}/profiles/company/{{companyProfileId}}
+Accept: application/json
+Authorization: Bearer {{companyToken}}
+
+###
+# Update company profile
+PUT {{baseUrl}}/profiles/company/{{companyProfileId}}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{companyToken}}
+
+{
+  "company_name": "Acme Industries",
+  "company_description": "Leader français des solutions SaaS industrielles.",
+  "website": "https://acme.test",
+  "contact_first_name": "Jeanne",
+  "contact_last_name": "Martin",
+  "contact_phone": "+33102030406"
+}
+
+###
+# Create CV document (stores cvSlug)
+# @name CreateCv
+POST {{baseUrl}}/cv
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "title": "Ingénieur Logiciel Fullstack",
+  "first_name": "Alice",
+  "last_name": "Durand",
+  "email": "{{studentEmail}}",
+  "phone": "+33601010101",
+  "location": "Lyon, France",
+  "summary": "Étudiante ingénieure passionnée par le développement web.",
+  "skills": [
+    { "name": "Laravel", "level": "advanced" },
+    { "name": "React", "level": "advanced" }
+  ],
+  "work_experiences": [
+    {
+      "company": "Startup XYZ",
+      "position": "Développeuse Fullstack",
+      "startDate": "2024-06",
+      "endDate": "2025-08",
+      "description": "Développement d'applications web.",
+      "current": false
+    }
+  ],
+  "educations": [
+    {
+      "institution": "ECE Paris",
+      "degree": "Ingénieur",
+      "field": "Informatique",
+      "startDate": "2022",
+      "current": true
+    }
+  ],
+  "languages": [
+    { "language": "Français", "level": "natif" },
+    { "language": "Anglais", "level": "courant" }
+  ],
+  "website": "https://alice.dev",
+  "linkedin": "https://linkedin.com/in/alice-durand",
+  "github": "https://github.com/alicedurand"
+}
+
+> {%
+  const data = response.body?.data;
+  if (data?.profile_slug) {
+    client.global.set("cvSlug", data.profile_slug);
+    client.log(`cvSlug set to ${data.profile_slug}`);
+  }
+%}
+
+###
+# Update CV document
+PATCH {{baseUrl}}/cv/{{cvSlug}}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "summary": "Profil mis à jour avec une nouvelle expérience.",
+  "skills": [
+    { "name": "Laravel", "level": "advanced" },
+    { "name": "React", "level": "advanced" },
+    { "name": "TypeScript", "level": "intermediate" }
+  ]
+}
+
+###
+# Public CV search (no auth required)
+GET {{baseUrl}}/cv?skill=Laravel&per_page=5
+Accept: application/json
+
+###
+# Show CV by slug
+GET {{baseUrl}}/cv/{{cvSlug}}
+Accept: application/json
+
+###
+# Create opportunity (stores opportunitySlug)
+# @name CreateOpportunity
+POST {{baseUrl}}/opportunities
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{companyToken}}
+
+{
+  "title": "Développeur Laravel",
+  "location": "Remote",
+  "employment_type": "CDI",
+  "is_remote": true,
+  "salary_range": "45k-55k",
+  "skills": ["Laravel", "PHP", "Vue.js"],
+  "description": "Construire des APIs modernes pour nos clients.",
+  "requirements": "3 ans d'expérience en PHP",
+  "benefits": "Télétravail, mutuelle",
+  "status": "published"
+}
+
+> {%
+  const data = response.body?.data;
+  if (data?.slug) {
+    client.global.set("opportunitySlug", data.slug);
+    client.log(`opportunitySlug set to ${data.slug}`);
+  }
+%}
+
+###
+# Update opportunity
+PATCH {{baseUrl}}/opportunities/{{opportunitySlug}}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{companyToken}}
+
+{
+  "salary_range": "50k-60k",
+  "status": "published"
+}
+
+###
+# Public opportunity list
+GET {{baseUrl}}/opportunities?per_page=5
+Accept: application/json
+
+###
+# Show opportunity by slug
+GET {{baseUrl}}/opportunities/{{opportunitySlug}}
+Accept: application/json
