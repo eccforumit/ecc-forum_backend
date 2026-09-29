@@ -15,6 +15,12 @@ class User extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
+     * Only safe, user-supplied fields are listed here. Privilege/security
+     * flags (is_staff, is_active, is_email_verified) and token fields are
+     * written explicitly via forceFill() in the auth services, so keeping
+     * them out of $fillable removes any risk of privilege escalation through
+     * mass assignment (e.g. a future User::create($request->all())).
+     *
      * @var list<string>
      */
     protected $fillable = [
@@ -24,13 +30,6 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'phone_number',
-        'is_email_verified',
-        'is_active',
-        'is_staff',
-        'email_verification_token',
-        'password_reset_token',
-        'password_reset_expires',
-        'last_login',
     ];
 
     /**
