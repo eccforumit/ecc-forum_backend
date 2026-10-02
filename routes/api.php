@@ -71,12 +71,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 });
 
+// Routes CV publiques
 Route::get('cv', [CvController::class, 'index']);
 Route::get('cv/{cvDocument}', [CvController::class, 'show']);
 
+// Routes opportunités publiques
 Route::get('opportunities', [OpportunityController::class, 'index']);
 Route::get('opportunities/{opportunity}', [OpportunityController::class, 'show']);
 
+// Routes contact
 Route::prefix('contact')->group(function () {
     Route::post('send', [ContactController::class, 'send']);
     Route::get('status', [ContactController::class, 'status']);
