@@ -14,7 +14,6 @@ use App\Http\Controllers\Api\StudentProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-<<<<<<< HEAD
     // Tighter throttling on credential/email endpoints to slow brute-force
     // and email-spam attempts (the global "api" limiter is 60/min).
     Route::middleware('throttle:6,1')->group(function () {
@@ -25,13 +24,7 @@ Route::prefix('auth')->group(function () {
     });
 
     Route::get('verify-email/{uid}/{token}', [EmailVerificationController::class, 'verify']);
-=======
-    Route::post('login', [LoginController::class, 'login']);
-    Route::post('password/forgot', [PasswordResetController::class, 'request']);
-    Route::post('password/reset', [PasswordResetController::class, 'reset']);
-    Route::get('verify-email/{uid}/{token}', [EmailVerificationController::class, 'verify']);
-    Route::post('verify-email/resend', [EmailVerificationController::class, 'resend']);
->>>>>>> 3a4f268d154c20c0089e892c69f31debe8639904
+
     Route::post('student/register', [RegistrationController::class, 'student']);
     // Route::post('company/register', [RegistrationController::class, 'company']); // Route désactivée
 
