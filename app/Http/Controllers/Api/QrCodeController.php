@@ -53,13 +53,9 @@ class QrCodeController extends Controller
                 'message' => $e->getMessage()
             ], 400);
         }
-<<<<<<< HEAD
     }
 
     public function generateStudentQrCode(QrCodeRequest $request, string $studentId): JsonResponse
-=======
-    }    public function generateStudentQrCode(QrCodeRequest $request, string $studentId): JsonResponse
->>>>>>> 3a4f268d154c20c0089e892c69f31debe8639904
     {
         $user = $request->user();
 
